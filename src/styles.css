@@ -1,5 +1,5 @@
 /* ============================================================
-   ALPHA 1 — ESTILOS GLOBALES
+   ALPHA 1 â ESTILOS GLOBALES
    ============================================================ */
 
 /* Variables */
@@ -378,4 +378,154 @@ input, select, textarea { font-family: inherit; outline: none; }
   .niches-grid { grid-template-columns: repeat(2, 1fr); }
   .pricing-grid { grid-template-columns: 1fr; }
   .hero-buttons { flex-direction: column; align-items: center; }
+}
+
+
+/* ============================================================
+   LOADING SCREEN
+   ============================================================ */
+.loading-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+}
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ============================================================
+   DASHBOARD LAYOUT
+   ============================================================ */
+.dashboard {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
+/* SIDEBAR */
+.dash-sidebar {
+  width: 240px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  flex-shrink: 0;
+}
+.dash-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin-bottom: 2rem;
+  padding: 0 0.5rem;
+}
+.dash-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+.dash-nav-item {
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 0.7rem 0.8rem;
+  border-radius: 8px;
+  text-align: left;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.dash-nav-item:hover { background: var(--bg-card); color: var(--text-primary); }
+.dash-nav-item.active { background: rgba(108,99,255,0.15); color: var(--accent); font-weight: 600; }
+.dash-signout {
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0.7rem 0.8rem;
+  border-radius: 8px;
+  text-align: left;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  margin-top: 1rem;
+  border: 1px solid var(--border);
+}
+.dash-signout:hover { color: #ff6464; border-color: #ff6464; }
+
+/* MAIN */
+.dash-main {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+.dash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+.dash-header h1 { font-size: 1.6rem; font-weight: 800; }
+.dash-user-badge {
+  width: 42px;
+  height: 42px;
+  background: var(--gradient);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+/* STATS */
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: border-color 0.2s;
+}
+.stat-card:hover { border-color: var(--accent); }
+.stat-icon { font-size: 2rem; }
+.stat-label { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.3rem; }
+.stat-value { font-size: 1.8rem; font-weight: 800; }
+
+/* EMPTY STATE */
+.dash-empty {
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 3rem;
+  text-align: center;
+}
+.dash-empty h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
+.dash-empty p { color: var(--text-secondary); }
+
+/* RESPONSIVE DASHBOARD */
+@media (max-width: 768px) {
+  .dashboard { flex-direction: column; }
+  .dash-sidebar { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; gap: 0.5rem; }
+  .dash-nav { flex-direction: row; flex-wrap: wrap; }
+  .dash-main { padding: 1rem; }
+  .dash-stats { grid-template-columns: repeat(2, 1fr); }
 }
