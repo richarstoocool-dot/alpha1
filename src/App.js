@@ -1,9 +1,64 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, createContext, useContext } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom';
+import { createClient } from '@supabase/supabase-js';
 import './styles.css';
 
 // ============================================================
-// DATOS CONSTANTES
+// SUPABASE CLIENT
+// ============================================================
+const supabase = createClient(
+  process.env.REACT_APP_SUPABASE_URL,
+  process.env.REACT_APP_SUPABASE_ANON_KEY
+);
+
+// ============================================================
+// AUTH CONTEXT
+// ============================================================
+const AuthContext = createContext(null);
+
+function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Sesión inicial
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+    // Listener de cambios
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, loading, supabase, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+function useAuth() {
+  return useContext(AuthContext);
+}
+
+// ============================================================
+// PRIVATE ROUTE
+// ============================================================
+function PrivateRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="loading-screen"><div className="spinner"></div></div>;
+  return user ? children : <Navigate to="/login" replace />;
+}
+
+// ============================================================
+// DATOS
 // ============================================================
 const NICHES = [
   { icon: '💇', name: 'Peluquería', desc: 'Cortes, coloración, tratamientos y más' },
@@ -29,88 +84,80 @@ const FEATURES = [
 
 const PRICING = [
   {
-    name: 'Starter',
-    price: '$0',
-    period: '/mes',
-    desc: 'Perfecto para empezar',
+    name: 'Starter', price: '$0', period: '/mes', desc: 'Perfecto para empezar',
     features: ['1 usuario', 'Hasta 50 citas/mes', 'Calendario básico', 'Soporte por email'],
-    cta: 'Empezar gratis',
-    highlighted: false,
+    cta: 'Empezar gratis', highlighted: false,
   },
   {
-    name: 'Pro',
-    price: '$29',
-    period: '/mes',
-    desc: 'Para negocios en crecimiento',
+    name: 'Pro', price: '$29', period: '/mes', desc: 'Para negocios en crecimiento',
     features: ['5 usuarios', 'Citas ilimitadas', 'Score de Credibilidad', 'Lista de Espera Inteligente', 'Notas de Preferencias', 'WhatsApp + Email'],
-    cta: 'Probar 14 días gratis',
-    highlighted: true,
+    cta: 'Probar 14 días gratis', highlighted: true,
   },
   {
-    name: 'Business',
-    price: '$79',
-    period: '/mes',
-    desc: 'Para equipos y franquicias',
+    name: 'Business', price: '$79', period: '/mes', desc: 'Para equipos y franquicias',
     features: ['Usuarios ilimitados', 'Multi-sucursal', 'IA y Analytics avanzados', 'API access', 'Soporte prioritario 24/7', 'Depósito Stripe'],
-    cta: 'Contactar ventas',
-    highlighted: false,
+    cta: 'Contactar ventas', highlighted: false,
   },
 ];
 
 // ============================================================
-// PÁGINAS
+// NAVBAR COMPONENT
 // ============================================================
-
-// --- LANDING PAGE ---
-function LandingPage() {
+function Navbar() {
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [lang, setLang] = useState('ES');
 
   return (
-    <div className="app">
-      {/* NAVBAR */}
-      <nav className="navbar">
-        <div className="nav-container">
-          <div className="nav-brand">
-            <span className="brand-icon">⚡</span>
-            <span className="brand-name">Alpha<span className="brand-number">1</span></span>
-          </div>
-          <div className="nav-links">
-            <a href="#features" className="nav-link">Funciones</a>
-            <a href="#niches" className="nav-link">Industrias</a>
-            <a href="#pricing" className="nav-link">Precios</a>
-            <button className="btn-lang" onClick={() => setLang(lang === 'ES' ? 'EN' : 'ES')}>{lang}</button>
-            <button className="btn-secondary" onClick={() => navigate('/login')}>Iniciar sesión</button>
-            <button className="btn-primary" onClick={() => navigate('/register')}>Empezar gratis</button>
-          </div>
+    <nav className="navbar">
+      <div className="nav-container">
+        <div className="nav-brand" onClick={() => navigate('/')} style={{cursor:'pointer'}}>
+          <span className="brand-icon">⚡</span>
+          <span className="brand-name">Alpha<span className="brand-number">1</span></span>
         </div>
-      </nav>
+        <div className="nav-links">
+          <a href="#features" className="nav-link">Funciones</a>
+          <a href="#niches" className="nav-link">Industrias</a>
+          <a href="#pricing" className="nav-link">Precios</a>
+          <button className="btn-lang" onClick={() => setLang(lang === 'ES' ? 'EN' : 'ES')}>{lang}</button>
+          {user ? (
+            <>
+              <button className="btn-secondary" onClick={() => navigate('/dashboard')}>Dashboard</button>
+              <button className="btn-outline" onClick={signOut}>Cerrar sesión</button>
+            </>
+          ) : (
+            <>
+              <button className="btn-secondary" onClick={() => navigate('/login')}>Iniciar sesión</button>
+              <button className="btn-primary" onClick={() => navigate('/register')}>Empezar gratis</button>
+            </>
+          )}
+        </div>
+      </div>
+    </nav>
+  );
+}
 
-      {/* HERO */}
+// ============================================================
+// LANDING PAGE
+// ============================================================
+function LandingPage() {
+  const navigate = useNavigate();
+  return (
+    <div className="app">
+      <Navbar />
       <section className="hero-section">
         <div className="container text-center">
           <div className="hero-badge">🚀 La plataforma de reservas #1 para negocios</div>
-          <h1 className="hero-title">
-            Gestiona tus reservas<br />
-            <span className="gradient-text">sin esfuerzo</span>
-          </h1>
-          <p className="hero-sub">
-            Alpha 1 automatiza tu agenda, reduce ausencias y fideliza clientes.<br />
-            10 industrias. Un solo sistema.
-          </p>
+          <h1 className="hero-title">Gestiona tus reservas<br /><span className="gradient-text">sin esfuerzo</span></h1>
+          <p className="hero-sub">Alpha 1 automatiza tu agenda, reduce ausencias y fideliza clientes.<br />10 industrias. Un solo sistema.</p>
           <div className="hero-buttons">
-            <button className="btn-primary btn-large" onClick={() => navigate('/register')}>
-              Empezar gratis →
-            </button>
-            <button className="btn-outline btn-large" onClick={() => navigate('/demo')}>
-              Ver demo
-            </button>
+            <button className="btn-primary btn-large" onClick={() => navigate('/register')}>Empezar gratis →</button>
+            <button className="btn-outline btn-large" onClick={() => navigate('/demo')}>Ver demo</button>
           </div>
           <p className="hero-note">Sin tarjeta de crédito • Configuración en 5 minutos</p>
         </div>
       </section>
 
-      {/* FEATURES */}
       <section id="features" style={{background: 'var(--bg-secondary)'}}>
         <div className="container text-center">
           <div className="section-label">Todo lo que necesitas</div>
@@ -128,7 +175,6 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* NICHES */}
       <section id="niches" className="niches-section">
         <div className="container text-center">
           <div className="section-label">10 industrias</div>
@@ -147,7 +193,6 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* PRICING */}
       <section id="pricing" style={{background: 'var(--bg-secondary)'}}>
         <div className="container text-center">
           <div className="section-label">Planes</div>
@@ -160,22 +205,14 @@ function LandingPage() {
                 <h3>{p.name}</h3>
                 <div className="pricing-price">{p.price}<span>{p.period}</span></div>
                 <p>{p.desc}</p>
-                <ul className="pricing-features">
-                  {p.features.map((f, j) => <li key={j}>✓ {f}</li>)}
-                </ul>
-                <button
-                  className={`${p.highlighted ? 'btn-primary' : 'btn-outline'} btn-full`}
-                  onClick={() => navigate('/register')}
-                >
-                  {p.cta}
-                </button>
+                <ul className="pricing-features">{p.features.map((f,j) => <li key={j}>✓ {f}</li>)}</ul>
+                <button className={`${p.highlighted ? 'btn-primary' : 'btn-outline'} btn-full`} onClick={() => navigate('/register')}>{p.cta}</button>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* FOOTER */}
       <footer className="footer">
         <div className="container text-center">
           <div className="nav-brand" style={{justifyContent:'center', marginBottom:'1rem'}}>
@@ -194,39 +231,35 @@ function LandingPage() {
   );
 }
 
-// --- LOGIN PAGE ---
+// ============================================================
+// LOGIN PAGE
+// ============================================================
 function LoginPage() {
   const navigate = useNavigate();
+  const { user, supabase } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (user) navigate('/dashboard', { replace: true });
+  }, [user, navigate]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    try {
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(
-        process.env.REACT_APP_SUPABASE_URL,
-        process.env.REACT_APP_SUPABASE_ANON_KEY
-      );
-      const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
-      if (authError) throw authError;
-      navigate('/dashboard');
-    } catch (err) {
-      setError(err.message || 'Error al iniciar sesión');
-    } finally {
-      setLoading(false);
-    }
+    const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+    if (err) { setError(err.message); setLoading(false); }
+    else navigate('/dashboard', { replace: true });
   };
 
   return (
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-header">
-          <div className="nav-brand" style={{justifyContent:'center', marginBottom:'0.5rem'}}>
+          <div className="nav-brand" style={{justifyContent:'center', marginBottom:'0.5rem', cursor:'pointer'}} onClick={() => navigate('/')}>
             <span className="brand-icon">⚡</span>
             <span className="brand-name">Alpha<span className="brand-number">1</span></span>
           </div>
@@ -256,13 +289,19 @@ function LoginPage() {
   );
 }
 
-// --- REGISTER PAGE ---
+// ============================================================
+// REGISTER PAGE
+// ============================================================
 function RegisterPage() {
   const navigate = useNavigate();
+  const { user, supabase } = useAuth();
   const [form, setForm] = useState({ name: '', email: '', password: '', niche: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (user) navigate('/dashboard', { replace: true });
+  }, [user, navigate]);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -270,42 +309,20 @@ function RegisterPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    try {
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(
-        process.env.REACT_APP_SUPABASE_URL,
-        process.env.REACT_APP_SUPABASE_ANON_KEY
-      );
-      const { data, error: authError } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
-        options: { data: { name: form.name, niche: form.niche } }
-      });
-      if (authError) throw authError;
-      setSuccess(true);
-    } catch (err) {
-      setError(err.message || 'Error al registrarse');
-    } finally {
-      setLoading(false);
-    }
+    const { error: err } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+      options: { data: { name: form.name, niche: form.niche } }
+    });
+    if (err) { setError(err.message); setLoading(false); }
+    else navigate('/dashboard', { replace: true });
   };
-
-  if (success) return (
-    <div className="auth-page">
-      <div className="auth-card text-center">
-        <div style={{fontSize:'3rem', marginBottom:'1rem'}}>📧</div>
-        <h2>¡Revisa tu email!</h2>
-        <p style={{color:'var(--text-muted)', margin:'1rem 0'}}>Te enviamos un link de confirmación a <strong>{form.email}</strong></p>
-        <button className="btn-primary" onClick={() => navigate('/login')}>Ir al login</button>
-      </div>
-    </div>
-  );
 
   return (
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-header">
-          <div className="nav-brand" style={{justifyContent:'center', marginBottom:'0.5rem'}}>
+          <div className="nav-brand" style={{justifyContent:'center', marginBottom:'0.5rem', cursor:'pointer'}} onClick={() => navigate('/')}>
             <span className="brand-icon">⚡</span>
             <span className="brand-name">Alpha<span className="brand-number">1</span></span>
           </div>
@@ -346,7 +363,9 @@ function RegisterPage() {
   );
 }
 
-// --- DEMO PAGE ---
+// ============================================================
+// DEMO PAGE
+// ============================================================
 function DemoPage() {
   const navigate = useNavigate();
   return (
@@ -354,9 +373,7 @@ function DemoPage() {
       <div className="auth-card text-center" style={{maxWidth:'600px'}}>
         <div style={{fontSize:'3rem', marginBottom:'1rem'}}>🎬</div>
         <h2>Demo interactivo</h2>
-        <p style={{color:'var(--text-muted)', margin:'1rem 0'}}>
-          Explora el dashboard de Alpha 1 sin crear cuenta.
-        </p>
+        <p style={{color:'var(--text-muted)', margin:'1rem 0'}}>Explora las funciones de Alpha 1 sin crear cuenta.</p>
         <div style={{background:'var(--bg-secondary)', borderRadius:'12px', padding:'1.5rem', margin:'1.5rem 0', textAlign:'left'}}>
           <p style={{fontWeight:'600', marginBottom:'0.75rem'}}>En el demo podrás ver:</p>
           <ul style={{listStyle:'none', padding:0, display:'flex', flexDirection:'column', gap:'0.5rem'}}>
@@ -367,9 +384,7 @@ function DemoPage() {
             <li>✅ Sistema de notificaciones</li>
           </ul>
         </div>
-        <button className="btn-primary btn-full" onClick={() => navigate('/register')}>
-          Crear cuenta gratis (mejor que el demo) →
-        </button>
+        <button className="btn-primary btn-full" onClick={() => navigate('/register')}>Crear cuenta gratis (mejor que el demo) →</button>
         <br/><br/>
         <button className="btn-link" onClick={() => navigate('/')}>← Volver al inicio</button>
       </div>
@@ -377,17 +392,53 @@ function DemoPage() {
   );
 }
 
-// --- DASHBOARD PAGE (placeholder) ---
+// ============================================================
+// DASHBOARD PAGE
+// ============================================================
 function DashboardPage() {
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Usuario';
+  const userNiche = user?.user_metadata?.niche || 'tu negocio';
+
   return (
-    <div className="auth-page">
-      <div className="auth-card text-center">
-        <div style={{fontSize:'3rem', marginBottom:'1rem'}}>🚧</div>
-        <h2>Dashboard</h2>
-        <p style={{color:'var(--text-muted)', margin:'1rem 0'}}>El dashboard completo estará disponible en la Fase 5.</p>
-        <button className="btn-primary" onClick={() => navigate('/')}>Volver al inicio</button>
-      </div>
+    <div className="dashboard">
+      <aside className="dash-sidebar">
+        <div className="dash-brand">
+          <span className="brand-icon">⚡</span>
+          <span className="brand-name">Alpha<span className="brand-number">1</span></span>
+        </div>
+        <nav className="dash-nav">
+          <button className="dash-nav-item active">📊 Dashboard</button>
+          <button className="dash-nav-item">📅 Citas</button>
+          <button className="dash-nav-item">👥 Clientes</button>
+          <button className="dash-nav-item">🔧 Servicios</button>
+          <button className="dash-nav-item">⏰ Horarios</button>
+          <button className="dash-nav-item">⚙️ Configuración</button>
+        </nav>
+        <button className="dash-signout" onClick={signOut}>Cerrar sesión</button>
+      </aside>
+      <main className="dash-main">
+        <header className="dash-header">
+          <div>
+            <h1>Bienvenido, {userName} 👋</h1>
+            <p style={{color:'var(--text-muted)'}}>Rubro: {userNiche}</p>
+          </div>
+          <div className="dash-user-badge">{userName[0].toUpperCase()}</div>
+        </header>
+        <div className="dash-stats">
+          <div className="stat-card"><div className="stat-icon">📅</div><div><p className="stat-label">Citas hoy</p><h2 className="stat-value">0</h2></div></div>
+          <div className="stat-card"><div className="stat-icon">👥</div><div><p className="stat-label">Clientes</p><h2 className="stat-value">0</h2></div></div>
+          <div className="stat-card"><div className="stat-icon">⭐</div><div><p className="stat-label">Score promedio</p><h2 className="stat-value">—</h2></div></div>
+          <div className="stat-card"><div className="stat-icon">💰</div><div><p className="stat-label">Ingresos mes</p><h2 className="stat-value">$0</h2></div></div>
+        </div>
+        <div className="dash-empty">
+          <div style={{fontSize:'3rem', marginBottom:'1rem'}}>🚀</div>
+          <h3>Tu negocio está listo</h3>
+          <p>Comienza configurando tus servicios y horarios para empezar a recibir reservas.</p>
+          <button className="btn-primary" style={{marginTop:'1.5rem'}}>Configurar servicios →</button>
+        </div>
+      </main>
     </div>
   );
 }
@@ -397,14 +448,16 @@ function DashboardPage() {
 // ============================================================
 export default function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/demo" element={<DemoPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/demo" element={<DemoPage />} />
+          <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
