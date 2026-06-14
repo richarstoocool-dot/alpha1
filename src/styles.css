@@ -1,5 +1,5 @@
 /* ============================================================
-   ALPHA 1 â ESTILOS GLOBALES
+   ALPHA 1 Ã¢ÂÂ ESTILOS GLOBALES
    ============================================================ */
 
 /* Variables */
@@ -529,3 +529,67 @@ input, select, textarea { font-family: inherit; outline: none; }
   .dash-main { padding: 1rem; }
   .dash-stats { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ============================================================
+   DASHBOARD SECCIONES — FASE 5
+   ============================================================ */
+.dash-section { margin-bottom: 2rem; }
+.dash-section-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:1.5rem; gap:1rem; flex-wrap:wrap; }
+.dash-section-header h2 { font-size:1.3rem; font-weight:800; margin-bottom:0.2rem; }
+.dash-section-header p { color:var(--text-muted); font-size:0.88rem; }
+.dash-loading { padding:2rem; text-align:center; color:var(--text-muted); }
+.dash-empty-sm { background:var(--bg-card); border:1px dashed var(--border); border-radius:var(--radius); padding:2rem; text-align:center; color:var(--text-muted); }
+
+/* FORMS */
+.dash-form { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem; margin-bottom:1.5rem; }
+.dash-form h3 { font-size:1rem; font-weight:700; margin-bottom:1rem; }
+.form-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:1rem; margin-bottom:1rem; }
+
+/* SERVICIOS */
+.servicios-grid { display:flex; flex-direction:column; gap:0.75rem; }
+.servicio-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1rem 1.25rem; display:flex; align-items:center; justify-content:space-between; transition:border-color 0.2s; }
+.servicio-card:hover { border-color:var(--accent); }
+.servicio-info { display:flex; align-items:center; gap:1rem; }
+.servicio-info h4 { font-size:0.95rem; font-weight:600; }
+.badge-duracion { background:rgba(108,99,255,0.12); color:var(--accent); padding:0.2rem 0.6rem; border-radius:50px; font-size:0.78rem; font-weight:600; }
+.servicio-actions { display:flex; align-items:center; gap:0.75rem; }
+.servicio-precio { font-size:1.1rem; font-weight:800; color:var(--accent); }
+.btn-icon { background:transparent; border:1px solid var(--border); border-radius:6px; padding:0.3rem 0.5rem; font-size:0.9rem; transition:all 0.2s; }
+.btn-icon:hover { border-color:var(--accent); background:rgba(108,99,255,0.1); }
+.btn-icon-danger:hover { border-color:#ff6464; background:rgba(255,100,100,0.1); }
+
+/* TABLA */
+.table-wrapper { overflow-x:auto; border-radius:var(--radius); border:1px solid var(--border); }
+.dash-table { width:100%; border-collapse:collapse; }
+.dash-table th { background:var(--bg-secondary); color:var(--text-muted); font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; padding:0.75rem 1rem; text-align:left; border-bottom:1px solid var(--border); }
+.dash-table td { padding:0.875rem 1rem; border-bottom:1px solid var(--border); font-size:0.9rem; }
+.dash-table tr:last-child td { border-bottom:none; }
+.dash-table tr:hover td { background:rgba(108,99,255,0.04); }
+
+/* SCORE */
+.score-badge { display:flex; align-items:center; gap:0.4rem; font-weight:700; }
+.score-value { font-size:1.05rem; }
+.score-label { font-size:0.75rem; font-weight:600; opacity:0.8; }
+
+/* ESTADO SELECT */
+.estado-select { background:var(--bg-secondary); border:1px solid var(--border); border-radius:6px; padding:0.3rem 0.5rem; font-size:0.85rem; font-weight:600; cursor:pointer; }
+
+/* HORARIOS */
+.horarios-grid { display:flex; flex-direction:column; gap:0.5rem; }
+.horario-row { display:flex; align-items:center; justify-content:space-between; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:0.875rem 1.25rem; transition:border-color 0.2s; }
+.horario-active { border-color:rgba(108,99,255,0.3); }
+.horario-inactive { opacity:0.55; }
+.horario-dia { display:flex; align-items:center; gap:0.75rem; min-width:130px; }
+.horario-dia label { font-weight:600; cursor:pointer; font-size:0.95rem; }
+.horario-dia input[type=checkbox] { width:16px; height:16px; accent-color:var(--accent); cursor:pointer; }
+.horario-horas { display:flex; align-items:center; gap:0.75rem; }
+.horario-horas input[type=time] { background:var(--bg-secondary); border:1px solid var(--border); border-radius:6px; padding:0.3rem 0.6rem; color:var(--text-primary); font-size:0.9rem; }
+.horario-cerrado { color:var(--text-muted); font-size:0.88rem; font-style:italic; }
+
+/* QUICKLINKS */
+.dash-quicklinks { margin-top:0.5rem; }
+.quicklinks-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:1rem; }
+.quicklink-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem 1rem; text-align:center; cursor:pointer; transition:all 0.2s; }
+.quicklink-card:hover { border-color:var(--accent); transform:translateY(-3px); box-shadow:var(--shadow); }
+.quicklink-card span { font-size:2rem; display:block; margin-bottom:0.5rem; }
+.quicklink-card p { font-size:0.85rem; font-weight:600; color:var(--text-secondary); }
